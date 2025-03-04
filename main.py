@@ -1,21 +1,11 @@
 import cv2
 import mediapipe as mp
+import argparse
 import os
 
-output_dir = './output'
-if not os.path.exists(output_dir):
-    os.makedirs(output_dir)
+def process_img(img, face_detection):
+    H, W, _ = img.shape
 
-# Read images
-img_path = './data/testImg.png'
-img = cv2.imread(img_path)
-file_name = os.path.basename(img_path)
-H, W, _ = img.shape
-
-# Detect faces
-mp_face_detection = mp.solutions.face_detection
-
-with mp_face_detection.FaceDetection(model_selection=0, min_detection_confidence=0.5) as face_detection:
     img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     out = face_detection.process(img_rgb)
 
@@ -31,9 +21,51 @@ with mp_face_detection.FaceDetection(model_selection=0, min_detection_confidence
             w = int(w * W)
             h = int(h * H)
 
-            #blur faces
-            img[y1:y1 + h, x1:x1 + w, :]= cv2.blur(img[y1:y1+h, x1:x1+w], (50,50) )
+            # blur faces
+            img[y1:y1 + h, x1:x1 + w, :] = cv2.blur(img[y1:y1 + h, x1:x1 + w], (50, 50))
+    return img
 
-#save image
-output_path = os.path.join(output_dir, file_name)
-cv2.imwrite(output_path, img)
+args = argparse.ArgumentParser()
+args.add_argument("--mode", default="video")
+args.add_argument("--filePath", default="./data/testVideo.mp4")
+
+args = args.parse_args()
+
+output_dir = './output'
+if not os.path.exists(output_dir):
+    os.makedirs(output_dir)
+
+# Detect faces
+mp_face_detection = mp.solutions.face_detection
+
+with mp_face_detection.FaceDetection(model_selection=0, min_detection_confidence=0.5) as face_detection:
+
+    if args.mode in ["image"]:
+        # Read image
+        img_path = args.filePath
+        img = cv2.imread(img_path)
+        file_name = os.path.basename(img_path)
+
+        img = process_img(img, face_detection)
+
+        #save image
+        output_path = os.path.join(output_dir, file_name)
+        cv2.imwrite(output_path, img)
+
+    elif args.mode in ['video']:
+        video_path = args.filePath
+        file_name = os.path.basename(video_path)
+        output_path = os.path.join(output_dir, file_name)
+
+        cap = cv2.VideoCapture(args.filePath)
+        ret, frame = cap.read()
+
+        output_video = cv2.VideoWriter(output_path, cv2.VideoWriter_fourcc(*'MP4V'), 25, (frame.shape[1],frame.shape[0]))
+
+        while ret:
+            frame = process_img(frame, face_detection)
+            output_video.write(frame)
+            ret, frame = cap.read()
+
+        cap.release()
+        output_video.release()
