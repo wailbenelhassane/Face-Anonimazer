@@ -26,8 +26,8 @@ def process_img(img, face_detection):
     return img
 
 args = argparse.ArgumentParser()
-args.add_argument("--mode", default="video")
-args.add_argument("--filePath", default="./data/testVideo.mp4")
+args.add_argument("--mode", default="image")
+args.add_argument("--filePath", default="./data/testImg2.jpg")
 
 args = args.parse_args()
 
@@ -69,3 +69,19 @@ with mp_face_detection.FaceDetection(model_selection=0, min_detection_confidence
 
         cap.release()
         output_video.release()
+
+    elif args.mode in ['webcam']:
+        cap = cv2.VideoCapture(0)
+
+        if not cap.isOpened():
+            print("Error: No se pudo abrir la cámara")
+            exit()
+
+        ret, frame = cap.read()
+        while ret:
+            frame = process_img(frame, face_detection)
+            cv2.imshow('frame', frame)
+            cv2.waitKey(25)
+            ret, frame = cap.read()
+
+        cap.release()
