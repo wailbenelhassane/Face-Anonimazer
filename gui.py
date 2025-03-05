@@ -2,9 +2,9 @@ import tkinter as tk
 from tkinter import filedialog, messagebox
 from tkinterdnd2 import TkinterDnD, DND_FILES
 import os
-from main import process_image, process_video, process_webcam # Importar las funciones de procesamiento
+from processor import process_image_file, process_video_file, process_webcam
 
-# Crear ventana principal
+
 root = TkinterDnD.Tk()
 root.title("Image/Video Processing")
 root.geometry("600x400")
@@ -39,9 +39,9 @@ def process_files():
 
     try:
         if mode == "image":
-            output_path = process_image(file_path, output_dir, blur_strength)
+            output_path = process_image_file(file_path, output_dir, blur_strength)
         elif mode == "video":
-            output_path = process_video(file_path, output_dir, blur_strength)
+            output_path = process_video_file(file_path, output_dir, blur_strength)
         else:
             messagebox.showerror("Error", "Webcam mode is not supported yet.")
             return
@@ -59,7 +59,8 @@ def on_drop(event):
     else:
         messagebox.showerror("Error", "Invalid file dropped.")
 
-# Interfaz
+
+
 frame = tk.Frame(root)
 frame.pack(pady=20)
 
@@ -85,7 +86,7 @@ mode_var = tk.StringVar(value="image")
 tk.Radiobutton(frame, text="Image", variable=mode_var, value="image").grid(row=3, column=1, sticky="w")
 tk.Radiobutton(frame, text="Video", variable=mode_var, value="video").grid(row=3, column=2, sticky="w")
 
-# Botón para iniciar la webcam en tiempo real
+
 live_webcam_button = tk.Button(root, text="Live Webcam", command=lambda: process_webcam(int(blur_strength_entry.get())))
 live_webcam_button.pack(pady=10)
 
@@ -99,3 +100,32 @@ process_button = tk.Button(root, text="Process", command=process_files)
 process_button.pack(pady=20)
 
 root.mainloop()
+
+def run_gui():
+    root = TkinterDnD.Tk()
+    root.title("Face Blur Processing")
+    root.geometry("600x400")
+
+    frame = tk.Frame(root)
+    frame.pack(pady=20)
+
+    tk.Label(frame, text="Select Input File:").grid(row=0, column=0, sticky="e")
+    file_entry = tk.Entry(frame, width=40)
+    file_entry.grid(row=0, column=1, padx=10)
+    tk.Button(frame, text="Browse", command=select_file).grid(row=0, column=2)
+
+    tk.Label(frame, text="Select Output Directory:").grid(row=1, column=0, sticky="e")
+    output_dir_entry = tk.Entry(frame, width=40)
+    output_dir_entry.grid(row=1, column=1, padx=10)
+    tk.Button(frame, text="Browse", command=select_output_dir).grid(row=1, column=2)
+
+    tk.Label(frame, text="Blur Strength:").grid(row=2, column=0, sticky="e")
+    blur_strength_entry = tk.Entry(frame)
+    blur_strength_entry.grid(row=2, column=1, padx=10)
+    blur_strength_entry.insert(0, "40")
+
+    tk.Button(root, text="Process", command=process_files).pack(pady=10)
+    tk.Button(root, text="Live Webcam", command=lambda: process_webcam(int(blur_strength_entry.get()))).pack(pady=10)
+
+    root.mainloop()
+
